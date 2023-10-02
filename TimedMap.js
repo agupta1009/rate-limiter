@@ -8,7 +8,6 @@ class TimedMap {
 
   // set key with expiration
   set(key, value) {
-    console.log(Date.now());
     if (!this.data[key] || Date.now() >= this.data[key].expirationTime) {
       this.data[key] = {
         value,
@@ -36,7 +35,6 @@ class TimedMap {
 
   // remove key
   remove(key) {
-    console.log(Date.now());
     delete this.data[key];
   }
 }

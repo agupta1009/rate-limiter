@@ -40,7 +40,6 @@ app.use((req, res, next) => {
 app.get("/api1", async (req, res) => {
   const ip =
     req.ip || req.headers["x-forwarded-for"] || req.connection.remoteAddress;
-  console.log(ip);
   res.status(200).json({
     calls: routeRequestCounts.get(ip),
     message: "this is your api1",
@@ -51,7 +50,6 @@ app.get("/api1", async (req, res) => {
 app.get("/api2", async (req, res) => {
   const ip =
     req.ip || req.headers["x-forwarded-for"] || req.connection.remoteAddress;
-  console.log(ip);
   res.status(200).json({
     calls: routeRequestCounts.get(ip),
     message: "this is your api2",

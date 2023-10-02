@@ -1,23 +1,30 @@
 const express = require("express")
 const app = express()
 const TimedMap = require('./TimedMap');
+const dotenv = require('dotenv');
+dotenv.config();
 
+
+//  Load the config file 
+const rateLimitWindowSec = parseInt(process.env.RATE_LIMIT_WINDOW_SEC) || 1; 
+const maxRequests = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100;
+const port = parseInt(process.env.port)
 
 // Initialize an object aka self expirinng hash map to store request api count
-const routeRequestCounts = new TimedMap(60 * 1000);
+const routeRequestCounts = new TimedMap(rateLimitWindowSec * 60 * 1000);
 
 // this is the middle thing aka middleware to have the request count for different ip's
 app.use((req, res, next) => {
-    const ip = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress
+    const ip = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress;
   if (!routeRequestCounts.get(ip)) {
     routeRequestCounts.set(ip,1); // Initialize count if not already present
   }else{
     routeRequestCounts.set(ip, 1 + routeRequestCounts.get(ip));
   }
-  if(routeRequestCounts.get(ip)>20){
+  if(routeRequestCounts.get(ip)> maxRequests){
     console.log("number of allowed call exceeded")
     return res.status(429).json({
-        message:"number of allowed api calls exceeded. Allowed calls: 20 Current Calls: " + routeRequestCounts.get(ip)
+        message:"number of allowed api calls exceeded. Allowed calls: " + maxRequests + " Current Calls: " + routeRequestCounts.get(ip)
     })
 
   }
@@ -49,6 +56,6 @@ app.get('/api1', async (req, res) => {
 
 
 // server port
-app.listen(8000,function(){
-    console.log("server started at port 8000")
+app.listen(port,()=>{
+    console.log("server started at port: "+ port);
 })

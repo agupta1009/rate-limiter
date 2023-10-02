@@ -1,25 +1,23 @@
-const express=require("express")
-const path=require("path")
-const app=express()
+const express = require("express")
+const app = express()
+const TimedMap = require('./TimedMap');
 
 
+// Initialize an object aka self expirinng hash map to store request api count
+const routeRequestCounts = new TimedMap(60 * 1000);
 
-
-// Initialize an object to store request counts for different routes
-const routeRequestCounts = {};
-
-// Da middle thing to have the request count for different ips
+// this is the middle thing aka middleware to have the request count for different ip's
 app.use((req, res, next) => {
-    const ip=req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress
-  if (!routeRequestCounts[ip]) {
-    routeRequestCounts[ip] = 1; // Initialize count if not already present
+    const ip = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress
+  if (!routeRequestCounts.get(ip)) {
+    routeRequestCounts.set(ip,1); // Initialize count if not already present
   }else{
-    routeRequestCounts[ip]++;
+    routeRequestCounts.set(ip, 1 + routeRequestCounts.get(ip));
   }
-  if(routeRequestCounts[ip]>20){
+  if(routeRequestCounts.get(ip)>20){
     console.log("number of allowed call exceeded")
     return res.status(429).json({
-        message:"number of allowed api calls exceeded. \n Allowed calls: 20 \n Current Calls: " + routeRequestCounts[ip]
+        message:"number of allowed api calls exceeded. Allowed calls: 20 Current Calls: " + routeRequestCounts.get(ip)
     })
 
   }
@@ -27,24 +25,27 @@ app.use((req, res, next) => {
 });
 
 // api routes 
+
+// api 1
 app.get('/api1', async (req, res) => {
-    const ip=req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress
+    const ip = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress
     console.log(ip)
     res.status(200).json({
-        "calls":routeRequestCounts[ip],
+        "calls":routeRequestCounts.get(ip),
         "message":"this is your api1"
     })
   });
 
+
+// api 2
   app.get('/api2', async (req, res) => {
-  const ip=req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress
+  const ip = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress
   console.log(ip)
   res.status(200).json({
-      "calls":routeRequestCounts[ip],
+      "calls":routeRequestCounts.get(ip),
       "message":"this is your api2"
   })
 });
-
 
 
 // server port

@@ -40,28 +40,20 @@ app.use((req, res, next) => {
 app.get("/api1", async (req, res) => {
   const ip =
     req.ip || req.headers["x-forwarded-for"] || req.connection.remoteAddress;
-  res
-    .status(200)
-    .header("Cache-Control", "no-store, must-revalidate")
-    .header("Pragma", "no-cache")
-    .json({
-      calls: routeRequestCounts.get(ip),
-      message: "this is your api1",
-    });
+  res.status(200).json({
+    calls: routeRequestCounts.get(ip),
+    message: "this is your api1",
+  });
 });
 
 // api 2
 app.get("/api2", async (req, res) => {
   const ip =
     req.ip || req.headers["x-forwarded-for"] || req.connection.remoteAddress;
-  res
-    .status(200)
-    .header("Cache-Control", "no-store, must-revalidate")
-    .header("Pragma", "no-cache")
-    .json({
-      calls: routeRequestCounts.get(ip),
-      message: "this is your api2",
-    });
+  res.status(200).json({
+    calls: routeRequestCounts.get(ip),
+    message: "this is your api2",
+  });
 });
 
 // server port

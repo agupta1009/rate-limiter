@@ -7,7 +7,7 @@ class TimedMap {
   }
 
   // set key with expiration
-  set(key, value) {
+  set(key, value, apiProcessingTimeMs) {
     if (!this.data[key] || Date.now() >= this.data[key].expirationTime) {
       this.data[key] = {
         value,
@@ -18,13 +18,19 @@ class TimedMap {
       setTimeout(() => {
         this.remove(key);
       }, this.expirationTimeMs);
+
+      // api processing time (remove api call is it has done processing)
+      let time = setInterval(() => {
+        if (this.data[key]?.value > 0) {
+          this.data[key].value = this.data[key].value - 1;
+        } else {
+          clearInterval(time);
+        }
+      }, apiProcessingTimeMs);
     } else {
       // Update the value while keeping the previous expiration time
       this.data[key].value = value;
     }
-
-    // TODO: add a set timeout to remove the count of network calls ie after every 2 sec for example, a network call aka api has finished its processing
-    // => this.data[key].value=this.data[key].value -1;
   }
 
   // Get key if exists or not expired

@@ -7,6 +7,7 @@ dotenv.config();
 //  Load the config file
 const rateLimitWindowSec = parseInt(process.env.RATE_LIMIT_WINDOW_SEC) || 1;
 const maxRequests = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100;
+const apiProcessTime = parseInt(process.env.API_PROCESS_TIME) || 3;
 const port = parseInt(process.env.port);
 
 // Initialize an object aka self expirinng hash map to store request api count
@@ -17,9 +18,13 @@ app.use((req, res, next) => {
   const ip =
     req.ip || req.headers["x-forwarded-for"] || req.connection.remoteAddress;
   if (!routeRequestCounts.get(ip)) {
-    routeRequestCounts.set(ip, 1); // Initialize count if not already present
+    routeRequestCounts.set(ip, 1, apiProcessTime * 1000); // Initialize count if not already present
   } else {
-    routeRequestCounts.set(ip, 1 + routeRequestCounts.get(ip));
+    routeRequestCounts.set(
+      ip,
+      1 + routeRequestCounts.get(ip),
+      apiProcessTime * 1000
+    );
   }
   if (routeRequestCounts.get(ip) > maxRequests) {
     console.log("number of allowed call exceeded");
@@ -37,7 +42,7 @@ app.use((req, res, next) => {
 // api routes
 
 // api 1
-app.get("/api1", async (req, res) => {
+app.get("/api1", (req, res) => {
   const ip =
     req.ip || req.headers["x-forwarded-for"] || req.connection.remoteAddress;
   res.status(200).json({
@@ -47,7 +52,7 @@ app.get("/api1", async (req, res) => {
 });
 
 // api 2
-app.get("/api2", async (req, res) => {
+app.get("/api2", (req, res) => {
   const ip =
     req.ip || req.headers["x-forwarded-for"] || req.connection.remoteAddress;
   res.status(200).json({
